@@ -33,6 +33,27 @@ void setup() {
   stepper2.moveTo(100);
 }
 
+// se deben ingresar las coordenadas en el formato x=#,y=# ej: x=100,y=200
+Coordinates leerSerial() {
+  Coordinates result;
+  result.posx = -1; // valor para indicar que no hay coordenadas nuevas
+  result.posy = -1;
+
+  if (Serial.available() > 0) {
+    String inputString = Serial.readStringUntil('\n');
+    if (inputString.startsWith("x=")) {
+      int y_sub = inputString.indexOf(",");
+      result.posx = inputString.substring(2, y_sub).toInt();
+      result.posy = inputString.substring(y_sub + 3).toInt();
+      Serial.print("El valor ingresado fue: x = ");
+      Serial.print(result.posx);
+      Serial.print(", y = ");
+      Serial.println(result.posy);
+    }
+  }
+  return result;
+}
+
 void loop() {
 
  // Revisa si hay nuevas coordenadas
@@ -57,25 +78,4 @@ void loop() {
     stepper2.moveTo(currentCoords.posy);
   stepper1.run();
   stepper2.run();
-}
-
-// se deben ingresar las coordenadas en el formato x=#,y=# ej: x=100,y=200
-Coordinates leerSerial() {
-  Coordinates result;
-  result.posx = -1; // valor para indicar que no hay coordenadas nuevas
-  result.posy = -1;
-
-  if (Serial.available() > 0) {
-    String inputString = Serial.readStringUntil('\n');
-    if (inputString.startsWith("x=")) {
-      int y_sub = inputString.indexOf(",");
-      result.posx = inputString.substring(2, y_sub).toInt();
-      result.posy = inputString.substring(y_sub + 3).toInt();
-      Serial.print("El valor ingresado fue: x = ");
-      Serial.print(result.posx);
-      Serial.print(", y = ");
-      Serial.println(result.posy);
-    }
-  }
-  return result;
 }
