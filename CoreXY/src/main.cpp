@@ -1,12 +1,16 @@
 #include <Arduino.h>
 #include <AccelStepper.h>
+#include <WiFi.h>
+
+// const char* ssid     = "Place Wifi name here";
+// const char* password = "Place your Wifi password here";
 
 // The X Stepper pins
-#define STEPPER1_DIR_PIN 3
-#define STEPPER1_STEP_PIN 2
+#define STEPPER1_DIR_PIN 16
+#define STEPPER1_STEP_PIN 17
 // The Y stepper pins
-#define STEPPER2_DIR_PIN 7
-#define STEPPER2_STEP_PIN 6
+#define STEPPER2_DIR_PIN 18
+#define STEPPER2_STEP_PIN 19
 
 struct Coordinates {
   int posx;
