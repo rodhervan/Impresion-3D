@@ -1,31 +1,29 @@
 #include <AccelStepper.h>
 
-// The X Stepper pins
+// The A Stepper pins
 #define STEPPER1_DIR_PIN 3
 #define STEPPER1_STEP_PIN 2
-// The Y stepper pins
+// The B stepper pins
 #define STEPPER2_DIR_PIN 7
 #define STEPPER2_STEP_PIN 6
 
 struct Coordinates {
-  int posx;
-  int posy;
+  float posx;
+  float posy;
 };
 
-int varX[10];
-int varY[2];
 
-int maxX = 280;
-int maxY = 280;
-int minX = 0;
-int minY = 0;
+float maxX = 280;
+float maxY = 280;
+float minX = 0;
+float minY = 0;
 
-// o double?
-double ScaleFactorX = 1;
-double ScaleFactorY = 1;
+// Ajustar dependiendo de cuanto se mueva cada motor
+double ScaleFactorA = 1;
+double ScaleFactorB = 1;
 
 // Maximo de coordenadas almacenadas en un tiempo dado
-const int maxQueueSize = 10;
+const int maxQueueSize = 36;
 
 // Definir los steppers y pines que se van a usar (si no funciona el primer parámetro probar con el número 1)
 AccelStepper stepper1(AccelStepper::DRIVER, STEPPER1_STEP_PIN, STEPPER1_DIR_PIN);
@@ -40,6 +38,7 @@ Coordinates previousCoords;
 
 void setup() {
   Serial.begin(9600);
+  Serial.println("iniciando recorrido...");
   currentCoords.posx = 0;
   currentCoords.posy = 0;
 
@@ -55,8 +54,6 @@ void setup() {
 void loop() {
   // Revisa si hay nuevas coordenadas
   Coordinates newCoords = leerSerial();
-
-  // falta agregar condiciones de limites
   if (newCoords.posx != -1) {
     if (queueSize < maxQueueSize) {
       queue[queueSize] = newCoords;
@@ -71,11 +68,6 @@ void loop() {
       // Hay coordenadas en queue, ejecutarlas:
       previousCoords = currentCoords;
       currentCoords = queue[0];
-      //// Nuevas coordenadas a usar
-      //Serial.print("posx = ");
-      //Serial.println(currentCoords.posx);
-      //Serial.print("posy = ");
-      //Serial.println(previousCoords.posx);
 
       Coordinates motor = transformacion_a_corexy(currentCoords, previousCoords);
       Serial.print("motor A: ");
@@ -99,7 +91,7 @@ void loop() {
   stepper2.run();
 }
 
-// se deben ingresar las coordenadas en el formato X# Y# ej: X100 Y200
+// se deben ingresar las coordenadas en gcode G01 X89.00 Y14.71
 Coordinates leerSerial() {
   Coordinates result;
   result.posx = -1;  // valor para indicar que no hay coordenadas nuevas
@@ -107,28 +99,41 @@ Coordinates leerSerial() {
 
   if (Serial.available() > 0) {
     String inputString = Serial.readStringUntil('\n');
-    if (inputString.startsWith("X")) {
-      int y_sub = inputString.indexOf(" ");
-      result.posx = inputString.substring(1, y_sub).toInt();
-      result.posy = inputString.substring(y_sub + 2).toInt();
+    if (inputString.startsWith("G01")) {
+      int y_sub = inputString.indexOf("Y");
+      int x_sub = inputString.indexOf("X");
+      result.posx = inputString.substring(x_sub+1, y_sub-1).toFloat();
+      result.posy = inputString.substring(y_sub + 1).toFloat();
       Serial.print("El valor ingresado fue: x = ");
       Serial.print(result.posx);
       Serial.print(", y = ");
       Serial.println(result.posy);
     }
+    else{
+      Serial.println("ingresar coordenadas en gcode");
+    }
   }
   return result;
 }
 
-// falta mirar cuando se pasa de los limites el delta en X,Y
 Coordinates transformacion_a_corexy(const Coordinates& current, const Coordinates& previous){
   Coordinates delta;
+  //// calculo de los Deltas
+  // revisa que este dentro de los limites
+  if ((current.posx > maxX)||(current.posy > maxY)||(current.posx < minX)||(current.posy < minY)){
+    delta.posx = 0;
+    delta.posy = 0;
+    Serial.println("Fuera del rango");
+  }
+  else{
   delta.posx = current.posx - previous.posx;
   delta.posy = current.posy - previous.posy;
- // tranformar a movimiento de motores en el coreXY
+  }
+ ////// tranformar deltas en x,y a movimiento de motores en el coreXY
   Coordinates motor;
-  motor.posx = int(ScaleFactorX*delta.posx + ScaleFactorY*delta.posy);
-  motor.posy = int(ScaleFactorX*delta.posx - ScaleFactorY*delta.posy);
+  // lo transformo a int porque no sé si la función de los steppers recibe input double
+  motor.posx = int(ScaleFactorA*delta.posx + ScaleFactorB*delta.posy);
+  motor.posy = int(ScaleFactorA*delta.posx - ScaleFactorB*delta.posy);
 
   return motor;
 }
