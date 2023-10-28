@@ -13,8 +13,8 @@ struct Coordinates {
 };
 
 
-float maxX = 280;
-float maxY = 280;
+float maxX = 220;
+float maxY = 200;
 float minX = 0;
 float minY = 0;
 
@@ -44,11 +44,11 @@ void setup() {
 
   stepper1.setMaxSpeed(100.0);
   stepper1.setAcceleration(100.0);
-  stepper1.moveTo(100);
+  stepper1.moveTo(0);
 
   stepper2.setMaxSpeed(100.0);
   stepper2.setAcceleration(100.0);
-  stepper2.moveTo(100);
+  stepper2.moveTo(0);
 }
 
 void loop() {
@@ -61,6 +61,10 @@ void loop() {
       Serial.println(queueSize);
     }
   }
+ //Serial.print(stepper1.distanceToGo());
+ //Serial.print("  ");
+ //Serial.println(stepper2.distanceToGo());
+
 
   // Cambiar movimiento de los motores
   if (stepper1.distanceToGo() == 0 && stepper2.distanceToGo() == 0) {
