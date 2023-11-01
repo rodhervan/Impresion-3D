@@ -101,6 +101,7 @@ void loop() {
   int stepper2Position = stepper2.distanceToGo();
   addToQueue1(stepper1Position);
   addToQueue2(stepper2Position);
+
   Serial.print(stepper1.distanceToGo());
   Serial.print("  ");
   Serial.println(stepper2.distanceToGo());
@@ -109,6 +110,9 @@ void loop() {
     // Do something when all elements in the queue are the same (excluding zero)
     // Replace the following line with your desired action.
     Serial.println("All elements in the queue are the same");
+    stepper1.stop();
+    stepper2.stop();
+    stepper2.moveTo(stepper2.currentPosition());
     stepper1.moveTo(stepper1.currentPosition());
     stepper2.moveTo(stepper2.currentPosition());
     stepper1.run();
@@ -122,6 +126,8 @@ void loop() {
   if (areAllEqual2(stepper2Position)) {
     // Do something when all elements in the queue for stepper2 are the same (excluding zero)
     Serial.println("All elements in the queue for stepper2 are the same");
+    stepper1.stop();
+    stepper2.stop();
     stepper1.moveTo(stepper1.currentPosition());
     stepper2.moveTo(stepper2.currentPosition());
     stepper1.run();
@@ -136,6 +142,7 @@ void loop() {
 
   // Cambiar movimiento de los motores
   if (stepper1.distanceToGo() == 0 && stepper2.distanceToGo() == 0) {
+    Serial.println("llego");
     if (queueSize > 0) {
       // Hay coordenadas en queue, ejecutarlas:
       previousCoords = currentCoords;
@@ -176,6 +183,7 @@ Coordinates leerSerial() {
       int x_sub = inputString.indexOf("X");
       result.posx = inputString.substring(x_sub+1, y_sub-1).toFloat();
       result.posy = inputString.substring(y_sub + 1).toFloat();
+      Serial.println("Recibido");
       Serial.print("El valor ingresado fue: x = ");
       Serial.print(result.posx);
       Serial.print(", y = ");
