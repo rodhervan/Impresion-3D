@@ -1,17 +1,18 @@
 #include <AccelStepper.h>
+#include <MultiStepper.h>
 
 // The A Stepper pins
-#define STEPPER1_DIR_PIN 3
-#define STEPPER1_STEP_PIN 2
+#define STEPPER1_DIR_PIN 8
+#define STEPPER1_STEP_PIN 9
 // The B stepper pins
-#define STEPPER2_DIR_PIN 7
-#define STEPPER2_STEP_PIN 6
+#define STEPPER2_DIR_PIN 10
+#define STEPPER2_STEP_PIN 11
 
 struct Coordinates {
   float posx;
   float posy;
 };
-
+MultiStepper steppers;
 
 float maxX = 10000;
 float maxY = 10000;
@@ -48,6 +49,9 @@ void setup() {
   Serial.println("iniciando recorrido...");
   currentCoords.posx = 0;
   currentCoords.posy = 0;
+
+  steppers.addStepper(stepper1);
+  steppers.addStepper(stepper2);
 
   stepper1.setMaxSpeed(100.0);
   stepper1.setAcceleration(100.0);
@@ -86,7 +90,7 @@ bool areAllEqual2(int value) {
 }
 
 void loop() {
-  
+  long positions[2];
   // Revisa si hay nuevas coordenadas
   Coordinates newCoords = leerSerial();
   if (newCoords.posx != -1) {
@@ -155,8 +159,11 @@ void loop() {
       Serial.println(motor.posy);
 
       // movimiento del motor con esas coordenadas
-      stepper1.moveTo(motor.posx);
-      stepper2.moveTo(motor.posy);
+      positions[0] = motor.posx;
+      positions[1] = motor.posy;
+      steppers.moveTo(positions);
+      // stepper1.moveTo(motor.posx);
+      // stepper2.moveTo(motor.posy);
 
       // Quitar coordenadas ya ejecutadas del queue
       for (int i = 0; i < queueSize - 1; i++) {
@@ -165,7 +172,7 @@ void loop() {
       queueSize--;
     }
   }
-
+  
   stepper1.run();
   stepper2.run();
 }
@@ -209,9 +216,9 @@ Coordinates transformacion_a_corexy(const Coordinates& current, const Coordinate
   
   //motor.posy = int(ScaleFactorB*(delta.posx - delta.posy));
   //stepper1 lado izquierdo del corexy
-  motor.posx = int(-ScaleFactorA*(current.posx + current.posy));
+  motor.posx = int(ScaleFactorA*(current.posx + current.posy));
   //stepper2 lado derecho del corexy
-  motor.posy = int(ScaleFactorB*(current.posx - current.posy));
+  motor.posy = int(-ScaleFactorB*(current.posx - current.posy));
 
 
 
