@@ -26,16 +26,20 @@ MultiStepper steppers;
 long positions[2];
 long inputx;
 long inputy;
-double ScaleFactorA = 1.9;
-double ScaleFactorB = 1.9;
+double ScaleFactorA = 1;
+double ScaleFactorB = 1;
+
+/// timer para esperar entre instrucciones
+unsigned long previousMillis = 0;
+const long interval = 500; // 500ms
 
 void setup() {
   Serial.begin(9600);
   Serial.println("iniciando...");
 
   // Configure each stepper
-  stepper1.setMaxSpeed(100);
-  stepper2.setMaxSpeed(100);
+  stepper1.setMaxSpeed(50);
+  stepper2.setMaxSpeed(50);
 
   // Then give them to MultiStepper to manage
   steppers.addStepper(stepper1);
@@ -73,6 +77,7 @@ void loop() {
   steppers.moveTo(positions);
   steppers.runSpeedToPosition();  // Blocks until all are in position
   // Serial.println(stepper1.distanceToGo());
-  delay(1000);
+  // Serial.println("fin del loop");
+  delay(100);
   
 }
